@@ -24,7 +24,10 @@ The app works without Neon and falls back to deterministic summaries if OpenAI i
 
 ## Production
 
-`render.yaml` defines the Render service. Configure `OPENAI_API_KEY` and `DATABASE_URL` as secret environment variables in Render. Set `public/config.js` to the Render API URL when copying the static frontend to another host such as `wayan.com/raleigh-renter`.
+- Public site: [wayan.com/raleigh-renter](https://wayan.com/raleigh-renter/)
+- API health: [raleigh-renter-api.onrender.com/healthz](https://raleigh-renter-api.onrender.com/healthz)
+
+`render.yaml` defines the Render service. Configure `OPENAI_API_KEY` and `DATABASE_URL` as secret environment variables in Render. Run `PUBLIC_API_BASE=https://raleigh-renter-api.onrender.com npm run build:wayan` to create the static Wayan deployment in `dist/`.
 
 ## Privacy
 
