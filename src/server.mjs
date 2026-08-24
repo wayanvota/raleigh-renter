@@ -14,7 +14,7 @@ import { buildReport } from "./report.mjs";
 import { checkDatabase, hasDatabase } from "./db.mjs";
 import { SOURCE_DEFINITIONS } from "./constants.mjs";
 
-const app = express();
+export const app = express();
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(directory, "../public");
 const buckets = new Map();
@@ -77,15 +77,34 @@ app.post("/api/report", rateLimit, async (request, response) => {
   }
 });
 
-app.get("/*splat", (_request, response) => response.sendFile(path.join(publicDir, "index.html")));
+app.all("/api/report", methodNotAllowed(["POST"]));
+app.all("/api/addresses", methodNotAllowed(["GET"]));
+app.all("/api/sources", methodNotAllowed(["GET"]));
+app.all("/api/*splat", (_request, response) => {
+  response.status(404).json({ error: "API endpoint not found.", code: "NOT_FOUND" });
+});
+
+app.get("/", (_request, response) => response.sendFile(path.join(publicDir, "index.html")));
+app.use((_request, response) => response.status(404).type("text/plain").send("Page not found."));
 
 app.use((error, _request, response, _next) => {
-  response.status(error?.message === "Origin not allowed." ? 403 : 500).json({ error: "The request could not be completed." });
+  if (error?.message === "Origin not allowed.") {
+    return response.status(403).json({ error: "The request could not be completed.", code: "ORIGIN_NOT_ALLOWED" });
+  }
+  if (error?.type === "entity.too.large") {
+    return response.status(413).json({ error: "The request body is too large.", code: "PAYLOAD_TOO_LARGE" });
+  }
+  if (error instanceof SyntaxError && Object.hasOwn(error, "body")) {
+    return response.status(400).json({ error: "The request body is not valid JSON.", code: "INVALID_JSON" });
+  }
+  return response.status(500).json({ error: "The request could not be completed.", code: "INTERNAL_ERROR" });
 });
 
-app.listen(config.port, () => {
-  console.log(`Raleigh Renter listening on port ${config.port}`);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  app.listen(config.port, () => {
+    console.log(`Raleigh Renter listening on port ${config.port}`);
+  });
+}
 
 function rateLimit(request, response, next) {
   const now = Date.now();
@@ -106,4 +125,11 @@ function rateLimit(request, response, next) {
 function publicMessage(error) {
   if (error instanceof z.ZodError) return "Enter a complete Raleigh street address.";
   return String(error?.message || "The request could not be completed.").slice(0, 300);
+}
+
+function methodNotAllowed(allowed) {
+  return (_request, response) => {
+    response.set("Allow", allowed.join(", "));
+    response.status(405).json({ error: "Method not allowed.", code: "METHOD_NOT_ALLOWED" });
+  };
 }

@@ -32,3 +32,13 @@ test("removes a unit number before matching the parcel address", () => {
     suffix: "ST",
   });
 });
+
+test("handles whitespace and Unicode street text without widening the house-number rule", () => {
+  assert.deepEqual(normalizeAddressInput("  123   José   Road  "), {
+    number: 123,
+    prefix: null,
+    name: "JOSÉ",
+    suffix: "RD",
+  });
+  assert.throws(() => normalizeAddressInput("１２３ Main Street"), /house number/);
+});

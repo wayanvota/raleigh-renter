@@ -5,7 +5,6 @@ const formStatus = document.querySelector("#form-status");
 const loading = document.querySelector("#loading");
 const reportNode = document.querySelector("#report");
 const suggestions = document.querySelector("#suggestions");
-let currentReport;
 let currentFilter = "all";
 let map;
 let debounce;
@@ -62,7 +61,6 @@ async function loadReport(address) {
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "The report could not be generated.");
-    currentReport = body;
     currentFilter = "all";
     renderReport(body);
     reportNode.hidden = false;

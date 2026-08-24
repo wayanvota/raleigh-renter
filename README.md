@@ -22,6 +22,13 @@ The application resolves an address against Wake County’s nightly address poin
 
 The app works without Neon and falls back to deterministic summaries if OpenAI is unavailable. Neither fallback hides a failed public source.
 
+## Testing
+
+- `npm run check` runs ESLint, compile checks, and the automated unit, component, API, accessibility, abuse-resistance, and content tests.
+- `npm run check:sources -- 222 W Hargett Street` checks the live official-data adapters without using OpenAI or writing user input to the database.
+- `PUBLIC_API_BASE=https://raleigh-renter-api.onrender.com npm run build:wayan` builds the static production artifact.
+- See [`TEST-REPORT.md`](TEST-REPORT.md) for the latest full QA and application-security review.
+
 ## Production
 
 - Public site: [wayan.com/raleigh-renter](https://wayan.com/raleigh-renter/)
@@ -39,6 +46,6 @@ The API does not write raw questions, IP addresses, user agents, or account data
 - [Wake County parcels](https://data.wake.gov/datasets/f5ed009c66e844ec82f29064edd95017)
 - [Ask Raleigh service requests](https://www.arcgis.com/home/item.html?id=54adb38aba1c4781927e6245dd1409d0)
 - [Raleigh building permits](https://data-ral.opendata.arcgis.com/datasets/ral::building-permits/about)
-- [Raleigh crime data](https://raleighnc.gov/apps-maps-and-open-data/services/raleighs-crime-data)
+- [Raleigh crime data](https://raleighnc.gov/police/services/raleighs-crime-data)
 - [Raleigh address services and floodplain lookup](https://raleighnc.gov/ask-raleigh-fix-report-request/services/find-your-services)
 - [Raleigh public-records request](https://raleighnc.gov/ask-raleigh-fix-report-request/services/records-request)

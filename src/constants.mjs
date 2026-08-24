@@ -3,7 +3,7 @@ export const SOURCE_URLS = {
   parcel: "https://data.wake.gov/datasets/f5ed009c66e844ec82f29064edd95017",
   requests: "https://www.arcgis.com/home/item.html?id=54adb38aba1c4781927e6245dd1409d0",
   permits: "https://data-ral.opendata.arcgis.com/datasets/ral::building-permits/about",
-  police: "https://raleighnc.gov/apps-maps-and-open-data/services/raleighs-crime-data",
+  police: "https://raleighnc.gov/police/services/raleighs-crime-data",
   flood: "https://raleighnc.gov/ask-raleigh-fix-report-request/services/find-your-services",
   recordsRequest: "https://raleighnc.gov/ask-raleigh-fix-report-request/services/records-request",
   imaps: "https://maps.raleighnc.gov/imaps/",

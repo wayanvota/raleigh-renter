@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Search Raleigh and Wake County public records before renting a home.">
+    <meta name="robots" content="index,follow">
+    <meta property="og:title" content="Raleigh Renter Records">
+    <meta property="og:description" content="Check Raleigh and Wake County public records before renting a home.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wayan.com/raleigh-renter/">
+    <link rel="canonical" href="https://wayan.com/raleigh-renter/">
     <title>Raleigh Renter Records</title>
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
     <link rel="stylesheet" href="styles.css">
@@ -33,7 +39,7 @@
             <input id="address" name="address" type="text" autocomplete="street-address" placeholder="222 W Hargett Street" minlength="5" maxlength="180" required aria-describedby="address-help form-status">
             <button type="submit">Check public records</button>
           </div>
-          <p id="address-help" class="field-help">Start with the house number. Unit numbers are not used because most source records match the parcel or street address.</p>
+          <p id="address-help" class="field-help">Start with the house number, not apartment number. For example: 123 High Street. Most source records match the street address.</p>
           <div id="suggestions" class="suggestions" hidden></div>
           <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
         </form>

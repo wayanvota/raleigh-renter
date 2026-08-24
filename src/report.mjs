@@ -12,7 +12,7 @@ export async function buildReport(rawAddress) {
 
   const collected = await collectPublicRecords(resolved);
   const jurisdiction = collected.parcel?.jurisdiction || "Not listed";
-  const inRaleighJurisdiction = /RALEIGH/i.test(jurisdiction);
+  const inRaleighJurisdiction = isRaleighJurisdiction(jurisdiction);
   const base = {
     id: crypto.randomUUID(),
     generatedAt: new Date().toISOString(),
@@ -43,6 +43,10 @@ export async function buildReport(rawAddress) {
     safely(() => saveSourceChecks(collected.sourceChecks)),
   ]);
   return report;
+}
+
+export function isRaleighJurisdiction(value) {
+  return /^(RA|RALEIGH)$/i.test(String(value || "").trim());
 }
 
 function sevenSteps() {
