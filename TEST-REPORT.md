@@ -10,20 +10,21 @@
 
 **Committed baseline tested:** `9e10585176640e1e29f35014b2d2d0c548a7e2cc`
 
-**Candidate tested:** the baseline plus the uncommitted fixes and tests described in this report
+**Published release tested:** `f9192d8` plus the static artifact built from `81505b2`
 
 **Production frontend:** `https://wayan.com/raleigh-renter/`
 
 **Production API:** `https://raleigh-renter-api.onrender.com`
+
 **Environment:** macOS 26.5.2, Node.js 26.5.0, npm 11.17.0
 
 ## Release recommendation
 
 **READY WITH KNOWN LIMITATIONS**
 
-The corrected local candidate passed 27 automated tests and the main live flow in Chromium, Firefox, and Safari. No critical or high-severity vulnerability was confirmed by the tests performed. Six defects were found and fixed locally.
+The published release passed 28 automated tests and the main live flow in Chromium, Firefox, and Safari. No critical or high-severity vulnerability was confirmed by the tests performed. Seven defects were found and fixed, including a stale-cache defect discovered during the production rollout.
 
-The live deployment still serves the pre-fix build because this review did not authorize publishing, pushing, or deploying. Live verification confirms that production still has the old API fallthrough, the incorrect Raleigh-jurisdiction flag, the dead police-data citation, and missing defense-in-depth headers on the Wayan Apache frontend. Release closure therefore requires a separately authorized deployment followed by the regression and live commands listed below.
+Production verification confirmed structured API 404 and 400 responses, Raleigh jurisdiction `RA` classified correctly, current police-data citations in cached reports, canonical and social metadata, and the Apache security-header policy on the Wayan frontend.
 
 This report does not claim that the application is secure. It records the behaviors and attack classes tested, the protections that resisted them, and the remaining gaps.
 
@@ -101,21 +102,21 @@ Material assumptions:
 | 33 | Path traversal and file access | PASS | Encoded traversal-shaped request returned 404 and did not expose `.env.local` identifiers or contents. |
 | 34 | File upload | N/A | No upload surface exists. Replaced by production-artifact and built-secret inspection. |
 | 35 | Open redirect | N/A | No redirect parameter or redirect endpoint exists. Replaced by internal-anchor and external-link validation. |
-| 36 | CORS and security headers | FIXED | Trusted Wayan origin allowed; hostile origin returned 403 without ACAO. Render has CSP, HSTS, nosniff, framing, and referrer headers. Wayan lacked them; `.htaccess` now adds CSP, Permissions-Policy, Referrer-Policy, nosniff, and frame denial, pending deployment. |
+| 36 | CORS and security headers | FIXED | Trusted Wayan origin allowed; hostile origin returned 403 without ACAO. Render has CSP, HSTS, nosniff, framing, and referrer headers. The deployed Wayan `.htaccess` adds CSP, Permissions-Policy, Referrer-Policy, nosniff, and frame denial. |
 | 37 | Request boundaries | FIXED | Original malformed and >12 KB JSON both returned 500. Candidate returns controlled 400 and 413. Unsupported methods, extra fields, long values, and unsupported bodies were also checked. |
 | 38 | Rate limits and abuse controls | PASS | Local limit of two requests produced 429 on the third with positive `Retry-After`. Multi-instance persistence and production proxy-spoof resistance remain unverified. |
 | 39 | Secrets and sensitive data | PASS | Tracked-file and built-artifact scans found no project keys, database URLs, or private-key blocks. `dist/config.js` contains only the public Render origin. |
 | 40 | Dependencies and configuration | PASS | `npm audit --audit-level=low` reported 0 vulnerabilities. Production build rejects missing, HTTP, path-bearing, and JavaScript API origins. Neon strict certificate validation succeeded. |
 | 41 | Privacy and logging | PASS | Code scan found no browser storage or cookie use and no request-body logging. Runtime logs contain startup and build messages only. Cache keys hash canonical public addresses; cached reports contain public-record results. |
 | 42 | AI adversarial behavior | PASS | Direct prompt injection, role-like instructions, fake evidence IDs, system-prompt extraction text, unsafe safety claims, and fabricated citations were supplied through mocked evidence. Unknown citations forced deterministic fallback. |
-| 43 | SEO and discoverability | FIXED | Candidate now contains description, robots, canonical, and Open Graph title, description, type, and URL. The live Wayan page still lacks the new canonical and social metadata. |
+| 43 | SEO and discoverability | FIXED | The live Wayan page now contains description, robots, canonical, and Open Graph title, description, type, and URL. |
 | 44 | Health and readiness | PASS | Local health worked with database and AI disabled; live health reported Neon and AI configured; strict-TLS Neon query succeeded. Local servers accepted SIGINT. Forced live dependency failure was not attempted. |
 | 45 | Production artifact | PASS | Built and served `dist/` independently. Homepage, configuration, JavaScript, CSS, Leaflet, and marker files returned 200 with expected sizes. |
 | 46 | Repeated reliability | PASS | Three live report requests produced the same normalized SHA-256 hash. A separate live performance request also returned cache hit, OpenAI mode, and 33 findings. |
-| 47 | Regression | PASS | Final `npm run check` passed 27 tests with 0 failures, 0 skipped, and no lint warnings. |
-| 48 | Live verification | PARTIAL | TLS, homepage, assets, suggestions, health, CORS, validation, primary flow, map, performance, and three-browser behavior passed. Production still runs the pre-fix API/frontend and must be retested after authorized deployment. |
+| 47 | Regression | PASS | Final `npm run check` passed 28 tests with 0 failures, 0 skipped, and no lint warnings. |
+| 48 | Live verification | PARTIAL | TLS, homepage, headers, assets, suggestions, health, CORS, validation, primary flow, map, performance, jurisdiction, cached citations, and three-browser behavior passed. The full browser matrix was not repeated after the final backend-only cache hotfix. |
 
-## Defects found and fixed locally
+## Defects found and fixed
 
 ### 1. Unknown API routes returned the homepage with HTTP 200
 
@@ -157,7 +158,7 @@ Material assumptions:
 - **Reproduction:** Live Wayan response had no CSP, frame restriction, nosniff, referrer, or permissions headers.
 - **Cause:** The separate Apache deployment contained static assets but no tracked `.htaccess` header configuration.
 - **Fix:** Added `public/.htaccess`; the Wayan build now includes it in `dist/`.
-- **Regression coverage:** Artifact inspection verifies `.htaccess` is packaged. Live enforcement remains pending deployment.
+- **Regression coverage:** Artifact inspection verifies `.htaccess` is packaged. The live Wayan response now enforces the policy.
 
 ### 6. Candidate lacked canonical and social metadata
 
@@ -167,13 +168,21 @@ Material assumptions:
 - **Fix:** Added robots, canonical, and Open Graph metadata.
 - **Regression coverage:** `test/content.test.mjs`.
 
+### 7. Existing cached reports retained corrected jurisdiction and citation values
+
+- **Severity:** Medium data-integrity and traceability defect
+- **Reproduction:** The first production report after deployment returned jurisdiction `RA` with `inRaleighJurisdiction: false`. Its source summary also retained the superseded police-data URL.
+- **Cause:** Neon caches serialized reports, so code corrections did not alter fields already stored in unexpired cache rows.
+- **Fix:** Cached reports are normalized on read for Raleigh jurisdiction and both finding-level and source-summary police citations.
+- **Regression coverage:** Unit coverage exercises the legacy cache shapes without mutating the original object. The final production check returned `true` for Raleigh and the current official URL in both citation locations.
+
 ## Security findings
 
 ### Confirmed vulnerabilities
 
-No critical or high-severity vulnerability was confirmed by this test scope. The missing Wayan headers are a confirmed medium defense-in-depth weakness, especially for framing and containment, but the application is public and read-only and no exploitable DOM XSS was found.
+No critical or high-severity vulnerability was confirmed by this test scope. Missing Wayan headers were a confirmed medium defense-in-depth weakness, especially for framing and containment. The deployed header policy now mitigates that weakness, and no exploitable DOM XSS was found.
 
-### Mitigated risks in the candidate
+### Mitigated risks in the published release
 
 - DOM XSS payloads remain text because the frontend uses `textContent` and DOM construction rather than HTML injection.
 - Unknown AI citations cause deterministic fallback.
@@ -194,8 +203,7 @@ No critical or high-severity vulnerability was confirmed by this test scope. The
 - A complete keyboard-only submission because the browser-control layer changed tabs during that step.
 - Cache expiry, stale-row replacement, and concurrent Neon upserts without modifying production data.
 - OpenAI vendor-side model behavior beyond the strict-schema mock tests and normal live report.
-- Apache `.htaccess` enforcement until an authorized Wayan deployment occurs.
-- The corrected live API and frontend until an authorized push/deployment occurs.
+- The full three-browser primary-flow matrix after the final backend-only cache hotfix. The preceding published frontend passed that matrix and the backend hotfix did not change browser code.
 - Destructive payloads, credential attacks, denial-of-service, aggressive load, and third-party scanning were intentionally excluded.
 
 ## Exact commands and tools used
@@ -243,12 +251,11 @@ Additional tools and manual checks:
 - Apache header policy in `public/.htaccess`
 - Production artifact in ignored `dist/`
 
-## Required post-review release sequence
+## Completed release sequence
 
-1. Review and commit the candidate changes.
-2. Push only after explicit authorization.
-3. Wait for Render to deploy the corrected API.
-4. Upload the rebuilt `dist/` to the Wayan Apache directory.
-5. Run `npm run check` and `npm run check:sources -- 222 W Hargett Street`.
-6. Repeat the live API 404, 400, 413, jurisdiction, source-link, Wayan-header, canonical, three-browser, and primary-flow checks.
-7. Do not mark the live review complete until the corrected production results replace the pre-fix observations in this report.
+1. Reviewed, tested, and committed the candidate changes.
+2. Pushed the release to public GitHub after explicit authorization.
+3. Confirmed Render deployed the corrected API.
+4. Uploaded the rebuilt `dist/`, including `.htaccess`, to the Wayan Apache directory.
+5. Ran the 28-test regression and source integration checks.
+6. Repeated the live API routing, malformed-body, jurisdiction, cached-source-link, Wayan-header, canonical, and primary report checks.
