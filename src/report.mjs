@@ -8,7 +8,7 @@ import { SOURCE_URLS } from "./constants.mjs";
 export async function buildReport(rawAddress) {
   const resolved = await resolveAddress(rawAddress);
   const cached = await safely(() => getCachedReport(resolved.address));
-  if (cached) return { ...cached, cache: { hit: true } };
+  if (cached) return { ...normalizeCachedReport(cached), cache: { hit: true } };
 
   const collected = await collectPublicRecords(resolved);
   const jurisdiction = collected.parcel?.jurisdiction || "Not listed";
@@ -47,6 +47,23 @@ export async function buildReport(rawAddress) {
 
 export function isRaleighJurisdiction(value) {
   return /^(RA|RALEIGH)$/i.test(String(value || "").trim());
+}
+
+export function normalizeCachedReport(report) {
+  const property = report?.property || {};
+  const normalizeSourceUrl = (record) => record?.sourceId === "police-incidents"
+    ? { ...record, sourceUrl: SOURCE_URLS.police }
+    : record;
+
+  return {
+    ...report,
+    property: {
+      ...property,
+      inRaleighJurisdiction: isRaleighJurisdiction(property.jurisdiction),
+    },
+    findings: Array.isArray(report?.findings) ? report.findings.map(normalizeSourceUrl) : report?.findings,
+    sources: Array.isArray(report?.sources) ? report.sources.map(normalizeSourceUrl) : report?.sources,
+  };
 }
 
 function sevenSteps() {
