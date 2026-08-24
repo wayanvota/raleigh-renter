@@ -51,9 +51,11 @@ export function isRaleighJurisdiction(value) {
 
 export function normalizeCachedReport(report) {
   const property = report?.property || {};
-  const normalizeSourceUrl = (record) => record?.sourceId === "police-incidents"
-    ? { ...record, sourceUrl: SOURCE_URLS.police }
-    : record;
+  const normalizeSourceUrl = (record) => {
+    if (record?.sourceId === "police-incidents") return { ...record, sourceUrl: SOURCE_URLS.police };
+    if (record?.id === "police-incidents") return { ...record, url: SOURCE_URLS.police };
+    return record;
+  };
 
   return {
     ...report,

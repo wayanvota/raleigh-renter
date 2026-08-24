@@ -14,13 +14,13 @@ test("normalizes corrected jurisdiction and citations in older cached reports", 
   const cached = {
     property: { jurisdiction: "RA", inRaleighJurisdiction: false },
     findings: [{ sourceId: "police-incidents", sourceUrl: oldPoliceUrl }],
-    sources: [{ id: "police-incidents", sourceId: "police-incidents", sourceUrl: oldPoliceUrl }],
+    sources: [{ id: "police-incidents", url: oldPoliceUrl }],
   };
 
   const normalized = normalizeCachedReport(cached);
 
   assert.equal(normalized.property.inRaleighJurisdiction, true);
   assert.equal(normalized.findings[0].sourceUrl, "https://raleighnc.gov/police/services/raleighs-crime-data");
-  assert.equal(normalized.sources[0].sourceUrl, "https://raleighnc.gov/police/services/raleighs-crime-data");
+  assert.equal(normalized.sources[0].url, "https://raleighnc.gov/police/services/raleighs-crime-data");
   assert.equal(cached.property.inRaleighJurisdiction, false);
 });
