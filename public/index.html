@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Search Raleigh and Wake County public records before renting a home.">
+    <title>Raleigh Renter Records</title>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynhHD4YgF/MZQyMv6drdXvYJv3ec=" crossorigin="">
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to search</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Raleigh Renter Records home">
+        <span class="brand-mark" aria-hidden="true">R</span>
+        <span>Raleigh Renter Records</span>
+      </a>
+      <a class="header-link" href="#method">How it works</a>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="eyebrow">PUBLIC RECORDS, PLAIN LANGUAGE</div>
+        <h1 id="hero-title">Know what the records say before you sign.</h1>
+        <p class="hero-copy">Enter a Raleigh address to check Wake County parcel data, city service requests, building permits, nearby reported police incidents, and mapped flood hazards.</p>
+
+        <form id="search-form" class="search-card" novalidate>
+          <label for="address">Raleigh street address</label>
+          <div class="search-row">
+            <input id="address" name="address" type="text" autocomplete="street-address" placeholder="222 W Hargett Street" minlength="5" maxlength="180" required aria-describedby="address-help form-status">
+            <button type="submit">Check public records</button>
+          </div>
+          <p id="address-help" class="field-help">Start with the house number. Unit numbers are not used because most source records match the parcel or street address.</p>
+          <div id="suggestions" class="suggestions" hidden></div>
+          <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="truth-strip">
+          <strong>A public-record snapshot, not a safety verdict.</strong>
+          <span>A complaint is not a confirmed violation. No matching record does not mean no problem exists.</span>
+        </div>
+      </section>
+
+      <section id="loading" class="loading-panel" hidden aria-live="polite">
+        <div class="pulse" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow">CHECKING OFFICIAL SOURCES</p>
+          <h2 id="loading-title">Resolving the address</h2>
+          <p id="loading-detail">Matching the address to Wake County’s parcel identifier.</p>
+        </div>
+      </section>
+
+      <section id="report" class="report" hidden aria-labelledby="report-title">
+        <div class="report-heading">
+          <div>
+            <p class="eyebrow">PUBLIC-RECORD REPORT</p>
+            <h2 id="report-title"></h2>
+            <p id="report-meta" class="report-meta"></p>
+          </div>
+          <button id="new-search" class="secondary-button" type="button">Check another address</button>
+        </div>
+
+        <div class="report-grid">
+          <article class="summary-card">
+            <p class="eyebrow">WHAT THE RECORDS SHOW</p>
+            <h3 id="summary-headline"></h3>
+            <div id="summary-overview" class="summary-list"></div>
+          </article>
+          <aside class="property-card">
+            <div id="map" aria-label="Map showing the resolved property and nearby incident-search radius"></div>
+            <dl id="property-facts"></dl>
+          </aside>
+        </div>
+
+        <section class="report-section" aria-labelledby="questions-title">
+          <div class="section-number">01</div>
+          <div>
+            <h3 id="questions-title">Questions to ask before signing</h3>
+            <div id="landlord-questions" class="question-list"></div>
+          </div>
+        </section>
+
+        <section class="report-section" aria-labelledby="findings-title">
+          <div class="section-number">02</div>
+          <div>
+            <h3 id="findings-title">Records found</h3>
+            <div id="finding-filters" class="filters" aria-label="Filter records"></div>
+            <div id="findings" class="findings"></div>
+          </div>
+        </section>
+
+        <section class="report-section warning-section" aria-labelledby="gaps-title">
+          <div class="section-number">03</div>
+          <div>
+            <h3 id="gaps-title">What this search cannot verify</h3>
+            <div id="caveats"></div>
+            <p class="gap-callout">Raleigh’s open service-request feed does not show whether a housing complaint became a verified code violation. <a id="records-request-link" target="_blank" rel="noopener">Request housing, nuisance, building, or fire-code records from the city</a> when the answer matters.</p>
+          </div>
+        </section>
+
+        <section class="report-section" aria-labelledby="sources-title">
+          <div class="section-number">04</div>
+          <div>
+            <h3 id="sources-title">Source coverage</h3>
+            <p class="section-intro">Every source shows how the property was matched, when it was checked, and whether it responded.</p>
+            <div id="sources" class="source-list"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="method" class="method" aria-labelledby="method-title">
+        <div class="method-heading">
+          <p class="eyebrow">THE METHOD</p>
+          <h2 id="method-title">Seven checks between a question and an answer.</h2>
+        </div>
+        <ol class="method-grid">
+          <li><span>1</span><strong>Resolve</strong><p>Match the typed address to Wake County’s canonical address point and parcel.</p></li>
+          <li><span>2</span><strong>Retrieve</strong><p>Query each public source by parcel, address, or a clearly labeled radius.</p></li>
+          <li><span>3</span><strong>Classify</strong><p>Keep complaints, permits, reported incidents, property facts, and hazards distinct.</p></li>
+          <li><span>4</span><strong>Explain</strong><p>Attach the official source and the records-request path where open data stops.</p></li>
+          <li><span>5</span><strong>Summarize</strong><p>Use AI only after retrieval, bounded to the records returned by the sources.</p></li>
+          <li><span>6</span><strong>Cite</strong><p>Show match method, scope, retrieval time, and evidence IDs.</p></li>
+          <li><span>7</span><strong>Abstain</strong><p>Say what remains unknown when the address match or source coverage is incomplete.</p></li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      <p><strong>Raleigh Renter Records</strong> is an independent public-data tool. It is not affiliated with the City of Raleigh or Wake County and does not provide legal, housing, or safety advice.</p>
+      <p>Data remains subject to each government source’s limitations and update schedule.</p>
+    </footer>
+  </body>
+</html>

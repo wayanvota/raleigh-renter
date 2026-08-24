@@ -1,0 +1,25 @@
+{
+  "name": "raleigh-renter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Source-grounded Raleigh rental property public-record reports.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.mjs",
+    "start": "node src/server.mjs",
+    "test": "node --test",
+    "check:sources": "node scripts/check-sources.mjs",
+    "build:wayan": "node scripts/build-wayan.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "pg": "^8.16.3",
+    "zod": "^4.2.1"
+  }
+}
