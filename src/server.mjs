@@ -84,7 +84,6 @@ app.all("/api/*splat", (_request, response) => {
   response.status(404).json({ error: "API endpoint not found.", code: "NOT_FOUND" });
 });
 
-app.get("/", (_request, response) => response.sendFile(path.join(publicDir, "index.html")));
 app.use((_request, response) => response.status(404).type("text/plain").send("Page not found."));
 
 app.use((error, _request, response, _next) => {
