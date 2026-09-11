@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import { JSDOM } from "jsdom";
 
-const html = (await fs.readFile(new URL("../public/index.html", import.meta.url), "utf8"))
-  .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-  .replaceAll(/<script[^>]*><\/script>/gi, "");
+const sourceHtml = await fs.readFile(new URL("../public/index.html", import.meta.url), "utf8");
+const sourceDom = new JSDOM(sourceHtml);
+sourceDom.window.document.querySelectorAll("script").forEach((script) => script.remove());
+const html = sourceDom.serialize();
+sourceDom.window.close();
 
 test("form validation and server errors remain usable", async () => {
   const { window, cleanup } = await loadUi(async () => ({
