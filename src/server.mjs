@@ -58,7 +58,7 @@ app.get("/api/sources", (_request, response) => {
   response.json({ sources: SOURCE_DEFINITIONS, databaseConfigured: hasDatabase() });
 });
 
-app.get("/api/addresses", async (request, response) => {
+app.get("/api/addresses", rateLimit, async (request, response) => {
   try {
     const q = z.string().trim().min(5).max(180).parse(request.query.q);
     response.json({ addresses: await suggestAddresses(q) });
@@ -117,7 +117,7 @@ function rateLimit(request, response, next) {
   prior.count += 1;
   if (prior.count > config.requestLimit) {
     response.set("Retry-After", String(Math.ceil((prior.resetAt - now) / 1000)));
-    return response.status(429).json({ error: "Too many reports were requested. Please try again in a few minutes." });
+    return response.status(429).json({ error: "Too many searches were requested. Please try again in a few minutes." });
   }
   next();
 }

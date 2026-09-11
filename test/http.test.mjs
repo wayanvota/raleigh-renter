@@ -123,3 +123,14 @@ test("rate limits repeated expensive report requests", async () => {
   assert.equal(limited.status, 429);
   assert.ok(Number(limited.headers.get("retry-after")) > 0);
 });
+
+test("rate limits repeated address lookups before public-record access", async () => {
+  const request = () => fetch(`${base}/api/addresses?q=x`, {
+    headers: { "x-forwarded-for": "203.0.113.11" },
+  });
+  assert.equal((await request()).status, 400);
+  assert.equal((await request()).status, 400);
+  const limited = await request();
+  assert.equal(limited.status, 429);
+  assert.match((await limited.json()).error, /Too many searches/);
+});
