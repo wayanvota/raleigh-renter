@@ -25,9 +25,14 @@ The app works without Neon and falls back to deterministic summaries if OpenAI i
 ## Testing
 
 - `npm run check` runs ESLint, compile checks, and the automated unit, component, API, accessibility, abuse-resistance, and content tests.
+- `npm run test:e2e` starts a deterministic fixture-backed Express server and drives Chromium through the real browser-to-API flow. It requires no database, OpenAI key, or public-data request.
+- `npm run test:ci` runs the full existing check plus the 20-category E2E suite used by GitHub Actions.
 - `npm run check:sources -- 222 W Hargett Street` checks the live official-data adapters without using OpenAI or writing user input to the database.
 - `PUBLIC_API_BASE=https://raleigh-renter-api.onrender.com npm run build:wayan` builds the static production artifact.
 - See [`TEST-REPORT.md`](TEST-REPORT.md) for the latest full QA and application-security review.
+- See [`E2E-TEST-REPORT.md`](E2E-TEST-REPORT.md) for the reproducible browser-to-backend contract and its 10 user and 10 adversarial categories.
+
+The optional `npm run test:live:openai` check queries the official public-data adapters for the documented civic test address and makes one evidence-gated OpenAI request. It requires `OPENAI_API_KEY`, spends API credits, and is deliberately excluded from CI.
 
 ## Production
 
