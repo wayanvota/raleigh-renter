@@ -5,12 +5,15 @@
   "type": "module",
   "description": "Source-grounded Raleigh rental property public-record reports.",
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.22.2"
   },
   "scripts": {
     "dev": "node --watch src/server.mjs",
     "start": "node src/server.mjs",
-    "test": "node --test",
+    "test": "node --test test/*.test.mjs",
+    "test:e2e": "playwright test",
+    "test:ci": "npm run check && npm run test:e2e",
+    "test:live:openai": "node test/live/openai-live-smoke.mjs",
     "lint": "eslint .",
     "check": "npm run lint && node --check src/server.mjs && node --check public/app.js && npm test",
     "check:sources": "node scripts/check-sources.mjs",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "axe-core": "^4.13.0",
     "eslint": "^10.9.0",
     "globals": "^17.11.0",
