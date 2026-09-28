@@ -12,6 +12,7 @@ import { config } from "./config.mjs";
 import { suggestAddresses } from "./address.mjs";
 import { buildReport } from "./report.mjs";
 import { checkDatabase, hasDatabase } from "./db.mjs";
+import { createDatabaseMonitor } from "./health.mjs";
 import { SOURCE_DEFINITIONS } from "./constants.mjs";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
@@ -23,6 +24,8 @@ export function createApp({
   hasDatabaseFn = hasDatabase,
 } = {}) {
   const app = express();
+  const databaseMonitor = createDatabaseMonitor(checkDatabaseFn);
+  app.locals.databaseMonitor = databaseMonitor;
   const buckets = new Map();
   const rateLimit = createRateLimit(buckets);
 
@@ -52,13 +55,14 @@ export function createApp({
   app.use(express.json({ limit: "12kb" }));
   app.use(express.static(publicDir, { extensions: ["html"], maxAge: process.env.NODE_ENV === "production" ? "1h" : 0 }));
 
-  app.get("/healthz", async (_request, response) => {
-    try {
-      const database = await checkDatabaseFn();
-      response.json({ ok: true, service: "raleigh-renter", database, aiConfigured: Boolean(process.env.OPENAI_API_KEY) });
-    } catch {
-      response.status(503).json({ ok: false, service: "raleigh-renter", database: { ok: false } });
-    }
+  app.get("/healthz", (_request, response) => {
+    response.json({ ok: true, service: "raleigh-renter", aiConfigured: Boolean(process.env.OPENAI_API_KEY) });
+  });
+
+  app.get("/healthz/database", (_request, response) => {
+    const result = databaseMonitor.snapshot();
+    response.set("Cache-Control", "no-store");
+    response.status(result.ok === true ? 200 : 503).json(result);
   });
 
   app.get("/api/sources", (_request, response) => {
@@ -113,6 +117,7 @@ export const app = createApp();
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   app.listen(config.port, () => {
+    void app.locals.databaseMonitor.start();
     console.log(`Raleigh Renter listening on port ${config.port}`);
   });
 }

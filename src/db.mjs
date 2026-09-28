@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import pg from "pg";
 import { config } from "./config.mjs";
 
-const { Pool } = pg;
+const { Pool, Client } = pg;
 let pool;
 let schemaPromise;
 
@@ -97,7 +97,18 @@ export async function saveSourceChecks(sourceChecks) {
 
 export async function checkDatabase() {
   if (!hasDatabase()) return { ok: true, mode: "disabled" };
-  await ensureSchema();
-  await getPool().query("select 1");
-  return { ok: true, mode: "neon" };
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: true },
+    application_name: "daily-database-health",
+    connectionTimeoutMillis: 10_000,
+    query_timeout: 10_000,
+  });
+  try {
+    await client.connect();
+    await client.query("select 1");
+    return { ok: true, mode: "neon" };
+  } finally {
+    await client.end();
+  }
 }

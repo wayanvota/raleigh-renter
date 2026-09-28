@@ -54,3 +54,22 @@ The API does not write raw questions, IP addresses, user agents, or account data
 - [Raleigh crime data](https://raleighnc.gov/police/services/raleighs-crime-data)
 - [Raleigh address services and floodplain lookup](https://raleighnc.gov/ask-raleigh-fix-report-request/services/find-your-services)
 - [Raleigh public-records request](https://raleighnc.gov/ask-raleigh-fix-report-request/services/records-request)
+
+## Database health and idle compute
+
+Render uses `/healthz` for liveness. This endpoint does not connect to the
+database and continues to return 200 if the database is unavailable.
+
+The production server checks its database once on startup, then every 24 hours
+after the preceding check completes. Each check uses a dedicated connection
+with 10-second connection/query timeouts and closes it afterward.
+`/healthz/database` only returns the last stored result, `checkedAt`, and
+`nextCheckAt`; repeated requests never trigger another database check. It
+returns 503 before the first result or after a failed check. Failures are also
+written to the application logs and do not trigger rapid retries or restarts.
+A service restart starts a new daily cycle. Keep the service at one process
+and one instance; additional workers would each run their own daily check.
+
+Normal user requests can wake Neon on demand. Keep Neon's five-minute
+scale-to-zero setting enabled. Do not use a database-dependent endpoint for
+Render's frequent health checks. No additional paid scheduler is needed.
