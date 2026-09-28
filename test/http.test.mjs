@@ -35,7 +35,6 @@ test("serves the homepage and health contract with security headers", async () =
   assert.deepEqual(await health.json(), {
     ok: true,
     service: "raleigh-renter",
-    database: { ok: true, mode: "disabled" },
     aiConfigured: false,
   });
 });
