@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Source-grounded Raleigh rental property public-record reports.",
   "engines": {
-    "node": ">=22.22.2"
+    "node": ">=22.23.4 <23"
   },
   "scripts": {
     "dev": "node --watch src/server.mjs",
